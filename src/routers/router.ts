@@ -1,9 +1,9 @@
-import { Router } from "express";
-import { controller } from "../controllers/controller"
-import dotenv from "dotenv"
-dotenv.config();
+import { Router } from 'express';
+
+import { Controller } from '../controllers/controller';
+
 export const createRouter = () => {
     const router = Router();
-    router.post(`/${process.env.TOKEN}`, controller.post);
+    router.post(`/${process.env.TOKEN}`, Controller.post);
     return router;
-}
+};
