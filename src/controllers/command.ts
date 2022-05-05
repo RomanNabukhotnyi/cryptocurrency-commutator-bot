@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-import { User } from '../db/entity/user.entity';
+import { User } from '../db/entity/User';
+import { UserRepository } from '../db/repository/UserRepository';
+import { ICoin } from '../interfaces/ICoin';
+import { ICommand } from '../interfaces/ICommand';
 
 const { TOKEN, SERVER_URL } = process.env;
 const TELEGRAM_API = `https://api.telegram.org/bot${TOKEN}`;
@@ -36,18 +39,18 @@ export class Command {
     }
 
     static async help(chatId: number) {
-        const commands = await (await axios.get(`${TELEGRAM_API}/getMyCommands`)).data;
+        const commands: { result: ICommand[] } = await (await axios.get(`${TELEGRAM_API}/getMyCommands`)).data;
         let listCommands = '';
-        commands.result.forEach((el: any) => {
+        commands.result.forEach((el) => {
             listCommands += `\n/${el.command} - ${el.description}`;
         });
         await sendMessage(chatId, 'This is a telegram bot that helps manage cryptocurrency.' + listCommands);
     }
 
     static async listRecent(chatId: number) {
-        const recent = await (await axios.get(String(process.env.SERVER))).data;
+        const recent: ICoin[] = await (await axios.get(String(process.env.SERVER))).data;
         let listRecent = '';
-        recent.forEach((el: any) => {
+        recent.forEach((el) => {
             let price = (el.coinMarketCapValue + el.coinBaseValue + el.coinStatsValue + el.kucoinValue + el.coinPaprikaValue) / 5;
             listRecent += `\n/${el.cryptocurrensyName} $${price.toFixed(6)}`;
         });
@@ -55,7 +58,7 @@ export class Command {
     }
 
     static async listFavorite(chatId: number) {
-        const user = await User.findOneBy({ id: chatId });
+        const user = await UserRepository.findOneBy({ id: chatId });
         if (user && user.favoriteCryptos.length != 0) {
             const favoriteCryptos = user.favoriteCryptos;
             let listFavorite = '';
@@ -79,7 +82,7 @@ export class Command {
         CoinStatsCap price: $${coin.coinStatsValue}\n\
         Kucoin price: $${coin.kucoinValue}\n\
         CoinPaprika price: $${coin.coinPaprikaValue}`;
-        const user = await User.findOneBy({ id: chatId });
+        const user = await UserRepository.findOneBy({ id: chatId });
         const keyboard = user?.favoriteCryptos.includes(coinName) 
             ? [{ text: 'Delete from favorite', callback_data: `/delete_favorite ${coinName}` }] 
             : [{ text: 'Add to favorite', callback_data: `/add_to_favorite ${coinName}` }];
@@ -88,7 +91,7 @@ export class Command {
 
     static async addToFavorite(chatId: number, coinName: string) {
         if (coinName != '') {
-            const user = await User.findOneBy({ id: chatId });
+            const user = await UserRepository.findOneBy({ id: chatId });
             if (user) {
                 if (!user.favoriteCryptos.includes(coinName)) {
                     user.favoriteCryptos = [...user.favoriteCryptos, coinName];
@@ -102,7 +105,7 @@ export class Command {
                     id: chatId,
                     favoriteCryptos: [coinName],
                 });
-                await newUser.save();
+                await UserRepository.save(newUser);
                 await sendMessage(chatId, 'Successfully added');
             }
         } else {
@@ -111,10 +114,10 @@ export class Command {
     }
 
     static async deleteFavorite(chatId: number, coinName: string) {
-        const user = await User.findOneBy({ id: chatId });
+        const user = await UserRepository.findOneBy({ id: chatId });
         if (user) {
             user.favoriteCryptos = user.favoriteCryptos.filter((coin) => { return coin != coinName; });
-            await user.save();
+            await UserRepository.save(user);
         }
         await sendMessage(chatId, 'Successfully deleted');
     }
