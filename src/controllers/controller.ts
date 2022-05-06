@@ -22,11 +22,11 @@ export class Controller {
             case /\/[A-Z]+/.test(text):
                 await Command.coinInfo(chatId, text.replace('/', ''));
                 break;
-            case /(\/add_to_favorite)\s([A-Z]+)/.test(text):
-                await Command.addToFavorite(chatId, text.replace('/add_to_favorite ', ''));
+            case /\/add_to_favorite/.test(text):
+                await Command.addToFavorite(chatId, text.split(' ')[1]);
                 break;
-            case /(\/delete_favorite)\s([A-Z]+)/.test(text):
-                await Command.deleteFavorite(chatId, text.replace('/delete_favorite ', ''));
+            case /\/delete_favorite/.test(text):
+                await Command.deleteFavorite(chatId, text.split(' ')[1]);
                 break;
             default:
                 break;
