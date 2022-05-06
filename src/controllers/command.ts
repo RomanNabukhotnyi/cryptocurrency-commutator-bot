@@ -95,13 +95,13 @@ export class Command {
                 if (!user.favoriteCryptos.includes(coinName)) {
                     user.favoriteCryptos = [...user.favoriteCryptos, coinName];
                     await user.save();
-                    await sendMessage(chatId, 'Successfully added');
+                    await sendMessage(chatId, `${coinName} successfully added`);
                 } else {
                     await sendMessage(chatId, `${coinName} is already on your favorites list`);
                 }
             } else {
                 await UserRepository.createUser({ id: chatId, favoriteCryptos: [coinName] });
-                await sendMessage(chatId, 'Successfully added');
+                await sendMessage(chatId, `${coinName} successfully added`);
             }
         } else {
             await sendMessage(chatId, 'This command needs a parameter');
@@ -112,10 +112,14 @@ export class Command {
         if (coinName) {
             const user = await UserRepository.getUser(chatId);
             if (user) {
-                user.favoriteCryptos = user.favoriteCryptos.filter((coin) => { return coin != coinName; });
-                await UserRepository.save(user);
+                if (user.favoriteCryptos.includes(coinName)) {
+                    user.favoriteCryptos = user.favoriteCryptos.filter((coin) => { return coin != coinName; });
+                    await UserRepository.save(user);
+                    await sendMessage(chatId, `${coinName} successfully deleted`);
+                } else {
+                    await sendMessage(chatId, `${coinName} is not on your favorites list`);
+                }
             }
-            await sendMessage(chatId, 'Successfully deleted');
         } else {
             await sendMessage(chatId, 'This command needs a parameter');
         }
