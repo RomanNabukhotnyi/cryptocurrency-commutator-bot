@@ -38,7 +38,7 @@ export class Command {
     }
 
     static async help(chatId: number) {
-        const commands: { result: ICommand[] } = await (await axios.get(`${TELEGRAM_API}/getMyCommands`)).data;
+        const commands = await axios.get<{ result: ICommand[]; }>(`${TELEGRAM_API}/getMyCommands`).then(res => res.data);
         let listCommands = '';
         commands.result.forEach((el) => {
             listCommands += `\n/${el.command} - ${el.description}`;
@@ -47,7 +47,7 @@ export class Command {
     }
 
     static async listRecent(chatId: number) {
-        const recent: ICoin[] = await (await axios.get(String(process.env.SERVER))).data;
+        const recent = await axios.get<ICoin[]>(String(process.env.SERVER)).then(res => res.data);
         let listRecent = '';
         recent.forEach((el) => {
             let price = (el.coinMarketCapValue + el.coinBaseValue + el.coinStatsValue + el.kucoinValue + el.coinPaprikaValue) / 5;
@@ -62,7 +62,7 @@ export class Command {
             const favoriteCryptos = user.favoriteCryptos;
             let listFavorite = '';
             for (const crypto of favoriteCryptos) {
-                const coin = await (await axios.get(process.env.SERVER + crypto)).data;
+                const coin = await axios.get<ICoin>(process.env.SERVER + crypto).then(res => res.data);
                 let price = (coin.coinMarketCapValue + coin.coinBaseValue + 
                             coin.coinStatsValue + coin.kucoinValue + coin.coinPaprikaValue) / 5;
                 listFavorite += `\n/${coin.cryptocurrensyName} $${price.toFixed(6)}`;
@@ -74,7 +74,7 @@ export class Command {
     }
 
     static async coinInfo(chatId: number, coinName: string) {
-        const coin = await (await axios.get(process.env.SERVER + coinName)).data;
+        const coin = await axios.get<ICoin>(process.env.SERVER + coinName).then(res => res.data);
         const cryptoInfo = `${coin.cryptocurrensyName}\n\
         CoinMarketCap price: $${coin.coinMarketCapValue}\n\
         CoinBase price: $${coin.coinBaseValue}\n\
