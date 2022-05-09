@@ -90,18 +90,23 @@ export class Command {
 
     static async addToFavorite(chatId: number, coinName: string | undefined) {
         if (coinName) {
-            const user = await UserRepository.getUser(chatId);
-            if (user) {
-                if (!user.favoriteCryptos.includes(coinName)) {
-                    user.favoriteCryptos = [...user.favoriteCryptos, coinName];
-                    await user.save();
-                    await sendMessage(chatId, `${coinName} successfully added`);
+            const coin = await axios.get<ICoin>(encodeURI(process.env.SERVER + coinName)).then(res => res.data);
+            if (coin) {
+                const user = await UserRepository.getUser(chatId);
+                if (user) {
+                    if (!user.favoriteCryptos.includes(coinName)) {
+                        user.favoriteCryptos = [...user.favoriteCryptos, coinName];
+                        await user.save();
+                        await sendMessage(chatId, `${coinName} successfully added`);
+                    } else {
+                        await sendMessage(chatId, `${coinName} is already on your favorites list`);
+                    }
                 } else {
-                    await sendMessage(chatId, `${coinName} is already on your favorites list`);
+                    await UserRepository.createUser({ id: chatId, favoriteCryptos: [coinName] });
+                    await sendMessage(chatId, `${coinName} successfully added`);
                 }
             } else {
-                await UserRepository.createUser({ id: chatId, favoriteCryptos: [coinName] });
-                await sendMessage(chatId, `${coinName} successfully added`);
+                await sendMessage(chatId, `No cryptocurrencies named "${coinName}" found`);
             }
         } else {
             await sendMessage(chatId, 'This command needs a parameter');
@@ -110,15 +115,20 @@ export class Command {
 
     static async deleteFavorite(chatId: number, coinName: string | undefined) {
         if (coinName) {
-            const user = await UserRepository.getUser(chatId);
-            if (user) {
-                if (user.favoriteCryptos.includes(coinName)) {
-                    user.favoriteCryptos = user.favoriteCryptos.filter((coin) => { return coin != coinName; });
-                    await UserRepository.save(user);
-                    await sendMessage(chatId, `${coinName} successfully deleted`);
-                } else {
-                    await sendMessage(chatId, `${coinName} is not on your favorites list`);
+            const coin = await axios.get<ICoin>(encodeURI(process.env.SERVER + coinName)).then(res => res.data);
+            if (coin) {
+                const user = await UserRepository.getUser(chatId);
+                if (user) {
+                    if (user.favoriteCryptos.includes(coinName)) {
+                        user.favoriteCryptos = user.favoriteCryptos.filter((c) => { return c != coinName; });
+                        await UserRepository.save(user);
+                        await sendMessage(chatId, `${coinName} successfully deleted`);
+                    } else {
+                        await sendMessage(chatId, `${coinName} is not on your favorites list`);
+                    }
                 }
+            } else {
+                await sendMessage(chatId, `No cryptocurrencies named "${coinName}" found`);
             }
         } else {
             await sendMessage(chatId, 'This command needs a parameter');

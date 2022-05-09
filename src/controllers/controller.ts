@@ -5,7 +5,7 @@ import { Command } from './command';
 export class Controller {
     static async post(req: Request, res: Response) {
         const chatId = req.body.callback_query?.message.chat.id ?? req.body.message.chat.id;
-        const text: string = req.body.message?.text ?? req.body.callback_query.data;
+        const text: string = req.body.message?.text.trim() ?? req.body.callback_query.data.trim();
         switch (true) {
             case text == '/start':
                 await Command.start(chatId);
@@ -23,10 +23,10 @@ export class Controller {
                 await Command.coinInfo(chatId, text.replace('/', ''));
                 break;
             case /\/add_to_favorite/.test(text):
-                await Command.addToFavorite(chatId, text.split(' ')[1]);
+                await Command.addToFavorite(chatId, text.split(/\s+/)[1]);
                 break;
             case /\/delete_favorite/.test(text):
-                await Command.deleteFavorite(chatId, text.split(' ')[1]);
+                await Command.deleteFavorite(chatId, text.split(/\s+/)[1]);
                 break;
             default:
                 break;
