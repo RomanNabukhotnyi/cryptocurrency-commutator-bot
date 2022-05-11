@@ -20,13 +20,13 @@ export class Controller {
                 await Command.listFavorite(chatId);
                 break;
             case /\/add_to_favorite/.test(text):
-                await Command.addToFavorite(chatId, text.split(/\s+/)[1].toLowerCase());
+                await Command.addToFavorite(chatId, text.split(/\s+/)[1]?.toUpperCase());
                 break;
             case /\/delete_favorite/.test(text):
-                await Command.deleteFavorite(chatId, text.split(/\s+/)[1].toLowerCase());
+                await Command.deleteFavorite(chatId, text.split(/\s+/)[1]?.toUpperCase());
                 break;
             case /\/[A-Za-z]+/.test(text):
-                await Command.coinInfo(chatId, text.replace('/', '').toLowerCase());
+                await Command.coinInfo(chatId, text.replace('/', '').toUpperCase());
                 break;
             default:
                 break;

@@ -75,17 +75,21 @@ export class Command {
 
     static async coinInfo(chatId: number, coinName: string) {
         const coin = await axios.get<ICoin>(process.env.SERVER + coinName).then(res => res.data);
-        const cryptoInfo = `${coin.cryptocurrensyName}\n\
-        CoinMarketCap price: $${coin.coinMarketCapValue}\n\
-        CoinBase price: $${coin.coinBaseValue}\n\
-        CoinStatsCap price: $${coin.coinStatsValue}\n\
-        Kucoin price: $${coin.kucoinValue}\n\
-        CoinPaprika price: $${coin.coinPaprikaValue}`;
-        const user = await UserRepository.getUser(chatId);
-        const keyboard = user?.favoriteCryptos.includes(coinName) 
-            ? [{ text: 'Delete from favorite', callback_data: `/delete_favorite ${coinName}` }] 
-            : [{ text: 'Add to favorite', callback_data: `/add_to_favorite ${coinName}` }];
-        await sendMessage(chatId, cryptoInfo, { inline_keyboard: [keyboard] });
+        if (coin) {
+            const cryptoInfo = `${coin.cryptocurrensyName}\n\
+            CoinMarketCap price: $${coin.coinMarketCapValue}\n\
+            CoinBase price: $${coin.coinBaseValue}\n\
+            CoinStatsCap price: $${coin.coinStatsValue}\n\
+            Kucoin price: $${coin.kucoinValue}\n\
+            CoinPaprika price: $${coin.coinPaprikaValue}`;
+            const user = await UserRepository.getUser(chatId);
+            const keyboard = user?.favoriteCryptos.includes(coinName) 
+                ? [{ text: 'Delete from favorite', callback_data: `/delete_favorite ${coinName}` }] 
+                : [{ text: 'Add to favorite', callback_data: `/add_to_favorite ${coinName}` }];
+            await sendMessage(chatId, cryptoInfo, { inline_keyboard: [keyboard] });
+        } else {
+            await sendMessage(chatId, `No cryptocurrencies named "${coinName}" found`);
+        }
     }
 
     static async addToFavorite(chatId: number, coinName: string | undefined) {
